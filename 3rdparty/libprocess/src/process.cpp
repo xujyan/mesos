@@ -1360,7 +1360,7 @@ void initialize(const string& delegate)
   // Setup processing threads.
   long cpus = std::max(4L, sysconf(_SC_NPROCESSORS_ONLN));
 
-  for (int i = 0; i < cpus; i++) {
+  for (int i = 0; i < 2 * cpus; i++) {
     pthread_t thread; // For now, not saving handles on our threads.
     if (pthread_create(&thread, NULL, schedule, NULL) != 0) {
       LOG(FATAL) << "Failed to initialize, pthread_create";
