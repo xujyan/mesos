@@ -4300,6 +4300,9 @@ Future<Response> Master::Http::__updateMaintenanceSchedule(
 
   return master->registrar->apply(Owned<RegistryOperation>(
       new maintenance::UpdateSchedule(schedule)))
+    .onAny([](Future<bool> result){
+      CHECK_READY(result);
+    })
     .then(defer(master->self(), [this, schedule](bool result) {
       return ___updateMaintenanceSchedule(schedule, result);
     }));
