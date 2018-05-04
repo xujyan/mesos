@@ -25,6 +25,8 @@
 
 #include <mesos/v1/scheduler/scheduler.hpp>
 
+#include <messages/log.hpp>
+
 #include <process/clock.hpp>
 #include <process/future.hpp>
 #include <process/http.hpp>
@@ -57,6 +59,8 @@
 #include "tests/utils.hpp"
 
 using google::protobuf::RepeatedPtrField;
+
+using mesos::internal::log::WriteResponse;
 
 using mesos::internal::master::Master;
 
@@ -157,7 +161,11 @@ public:
 TEST_F(MasterMaintenanceTest, UpdateSchedule)
 {
   // Set up a master.
-  Try<Owned<cluster::Master>> master = StartMaster();
+  master::Flags flags = CreateMasterFlags();
+  flags.registry = "replicated_log";
+  flags.registry_store_timeout = Seconds(5);
+
+  Try<Owned<cluster::Master>> master = StartMaster(flags);
   ASSERT_SOME(master);
 
   // Extra machine used in this test.
@@ -268,6 +276,8 @@ TEST_F(MasterMaintenanceTest, UpdateSchedule)
   // Post a valid schedule with two machines.
   schedule = createSchedule(
       {createWindow({machine1, machine2}, unavailability)});
+
+  DROP_MESSAGES(Eq(WriteResponse().GetTypeName()), _, _);
 
   response = process::http::post(
       master.get()->pid,
